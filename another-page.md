@@ -4,8 +4,6 @@ title: Práctica 1 - Follow Line
 description: Documentación técnica sobre las estrategias de control PID y visión artificial implementadas para el seguimiento de trayectoria.
 ---
 
-## Documentación: P1 - Follow Line
-
 El objetivo de esta práctica es desarrollar un sistema de control autónomo capaz de mantener un vehículo sobre una línea en un circuito cerrado. Para lograr la optimización del tiempo de vuelta, el desarrollo se ha estructurado iterativamente, evolucionando desde un modelo puramente reactivo hasta una arquitectura predictiva.
 
 Antes de detallar las aproximaciones de control, es fundamental definir el marco de evaluación utilizado para cuantificar el rendimiento del algoritmo.
