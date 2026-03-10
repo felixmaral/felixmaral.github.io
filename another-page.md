@@ -10,6 +10,12 @@ El objetivo de esta práctica es desarrollar un sistema de control autónomo cap
 
 Antes de detallar las aproximaciones de control, es fundamental definir el marco de evaluación utilizado para cuantificar el rendimiento del algoritmo.
 
+### Vídeo Explicativo
+
+<div style="text-align: center; margin-bottom: 20px;">
+    <iframe width="100%" height="400" src="https://www.youtube.com/embed/vfVKAqjipJ4?si=BE4J4qIQncB-Hyj_" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+</div>
+
 ---
 
 ### Métricas de Evaluación del Desempeño
@@ -44,15 +50,7 @@ Para el control longitudinal, se utiliza el valor absoluto del error lateral. Es
 * **Kd (Derivativo):** Proporciona una capacidad de frenado reactivo ante cambios bruscos. Si el error aumenta repentinamente (entrada agresiva en curva), el término derivativo aumenta el esfuerzo de frenado inmediatamente, reduciendo la inercia antes de que el error sea crítico.
 * **Ki (Integral):** Se omite deliberadamente para evitar el efecto de saturación (windup). Si se permitiera la acumulación del error durante una curva larga, el coche acabaría perdiendo demasiada velocidad o deteniéndose por completo.
 
----
-
-**Análisis de Resultados y Sintonización:**
-Debido a que el centro de masa promedia toda la línea visible, el controlador sufre de "latencia espacial". La señal de error reacciona tarde a las curvas, requiriendo un ajuste meticuloso de las ganancias para evitar la salida de la vía.
-
-> **[Espacio para Vídeo 1: Impacto de la Constante Proporcional (Kp)]**
-> *Descripción:* Comparativa métrica al incrementar el valor Kp de dirección. Se evidencia una reducción en el RMSE, pero a costa de inducir un balanceo sostenido que degrada la estabilidad general y aumenta el Zigzag.
-
-### Configuración Óptima de Parámetros
+### Configuración de Parámetros
 
 Tras realizar las pruebas documentadas, se determinó que la siguiente configuración ofrece el mejor equilibrio entre velocidad y estabilidad para un control puramente reactivo:
 
@@ -79,10 +77,8 @@ La dirección y la velocidad se independizan lógicamente para evitar oscilacion
 
 Esta formulación permite que el controlador reduzca la inercia lineal milisegundos antes de que el morro del chasis entre físicamente en la curva.
 
-> **[Espacio para Vídeo 4: Ejecución Predictiva Avanzada]**
-> *Descripción:* Demostración de la arquitectura Look-ahead con control desacoplado. Se aprecia la reducción predictiva de la velocidad instantes antes del vértice y la eliminación del balanceo durante el trazado interior, optimizando el tiempo global por vuelta.
 
-### Resultados de Rendimiento: Versión Predictiva
+### Resultados de Rendimiento Versión Predictiva
 
 Gracias al uso del punto de anticipación y el desacoplamiento de los controladores, se ha logrado incrementar la velocidad máxima sin perder la trazada. Se sacrifica una fracción de precisión posicional respecto al centro exacto de la línea, pero se mejora drásticamente la estabilidad direccional, obteniendo un avance sustancial en el tiempo de vuelta:
 
