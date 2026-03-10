@@ -75,15 +75,6 @@ $$V_k = \max(V_{min}, V_{max} - \Delta V_k)$$
 
 ---
 
-> **[Espacio para Vídeo 1: Comportamiento Base]**
-> *Descripción:* Ejecución del algoritmo reactivo con constantes conservadoras. Se observa la latencia en la entrada a la curva y la estabilización progresiva.
-
-> **[Espacio para Vídeo 2: Impacto de la Constante Proporcional ($K_p$)]**
-> *Descripción:* Comparativa al incrementar $K_{p_w}$. Se evidencia una reducción en el RMSE, pero un aumento notable en el balanceo y la métrica de Zigzag.
-
-> **[Espacio para Vídeo 3: Amortiguación Derivativa ($K_d$)]**
-> *Descripción:* Ajuste de $K_{d_w}$. Se muestra cómo el término derivativo estabiliza el vehículo, permitiendo un guiado suave y preciso.
-
 **Análisis de Resultados y Sintonización:**
 Debido a que el centro de masa promedia toda la línea visible, el controlador sufre de "latencia espacial". La señal de error reacciona tarde a las curvas, requiriendo un ajuste meticuloso de las ganancias para evitar la salida de la vía.
 
