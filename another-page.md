@@ -10,12 +10,6 @@ El objetivo de esta práctica es desarrollar un sistema de control autónomo cap
 
 Antes de detallar las aproximaciones de control, es fundamental definir el marco de evaluación utilizado para cuantificar el rendimiento del algoritmo.
 
-### Vídeo Explicativo
-
-<div style="text-align: center; margin-bottom: 20px;">
-    <iframe width="100%" height="400" src="https://www.youtube.com/embed/vfVKAqjipJ4?si=BE4J4qIQncB-Hyj_" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-</div>
-
 ---
 
 ### Métricas de Evaluación del Desempeño
@@ -27,6 +21,14 @@ Evalúa la desviación promedio del vehículo respecto a la referencia ideal (el
 
 **2. Oscilación y Esfuerzo de Control (Zigzag)**
 Un RMSE bajo no garantiza un buen controlador si el vehículo mantiene la trayectoria a base de oscilaciones violentas. Para medir el balanceo en la dirección, se cuantifica la tasa de variación media de la señal de control de giro. Un valor elevado indica inestabilidad o un ajuste excesivo de la constante derivativa, mientras que un valor cercano a cero refleja una conducción suave.
+
+---
+
+### Vídeo Explicativo
+
+<div style="text-align: center; margin-bottom: 20px;">
+    <iframe width="100%" height="400" src="https://www.youtube.com/embed/vfVKAqjipJ4?si=BE4J4qIQncB-Hyj_" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+</div>
 
 ---
 
