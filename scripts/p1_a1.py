@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 
 # FÉLIX MARTÍNEZ ALONSO
-# PRÁCTICA 1 - PRIMERA APROXIMACIÓN
+# PRÁCTICA 1 - PRIMERA APROXIMACIÓN - Control Reactivo
 
 def calculate_metrics(error_data, w_data):
     """
