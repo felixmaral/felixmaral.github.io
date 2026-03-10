@@ -2,5 +2,5 @@
 layout: default
 ---
 
-[P1_Follow_Line](./P1_Follow_Line.html).
+[P1_Follow_Line](./p1.html)
 
