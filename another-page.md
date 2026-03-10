@@ -92,11 +92,9 @@ Gracias al uso del punto de anticipación y el desacoplamiento de los controlado
 
 Para superar el límite de la sintonización manual, se proponen dos evoluciones que pasan de la ingeniería de control clásica a arquitecturas de aprendizaje automático.
 
-#### 1. Sintonización con Random Forest
-Uso de un modelo de Random Forest para predecir y ajustar las constantes del controlador (Kp, Ki, Kd) idóneas para cada circuito en tiempo real.
+- __Sintonización con Random Forest:__ Uso de un modelo de Random Forest para predecir y ajustar las constantes del controlador (Kp, Ki, Kd) idóneas para cada circuito en tiempo real.
 
-#### 2. Control End-to-End con Deep Reinforcement Learning
-Sustitución total del PID por un agente entrenado. Una red neuronal convolucional (CNN) leería los píxeles y decidiría los comandos de aceleración y volante directamente. El modelo se entrenaría iterativamente mediante prueba y error, utilizando funciones de recompensa penalizadas por colisiones y guiadas por la minimización del MSE y el ZigZag.
+- __Control End-to-End con Deep Reinforcement Learning:__ Sustitución total del PID por un agente entrenado. Una red neuronal convolucional (CNN) leería los píxeles y decidiría los comandos de aceleración y volante directamente. El modelo se entrenaría iterativamente mediante prueba y error, utilizando funciones de recompensa penalizadas por colisiones y guiadas por la minimización del MSE y el ZigZag.
 
 ---
 
