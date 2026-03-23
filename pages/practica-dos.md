@@ -23,7 +23,6 @@ x \sim P X
 $$
 
 
-
 ### Preprocesado
 
 Este apartado en este contexto no es necesario ya que partimos de un simulador en el que no existen condiciones que generen ruido en las imágenes capturadas, pero son buenas prácticas en el contexto de la extracción precisa de bordes. Cada imagen se procesa para mejorar la calidad de los bordes y aumentar la estabilidad de las comparaciones locales:
@@ -37,6 +36,12 @@ Este paso mejora la estabilidad del matching en zonas con iluminación irregular
 ### Extracción de bordes
 
 Sobre las imágenes preprocesadas se aplica el detector de Canny. Los píxeles de borde de la imagen izquierda actúan como puntos candidatos, mientras que los bordes de la derecha restringen las zonas donde merece la pena evaluar correspondencias.
+
+<p align="center">
+  <img src="{{ site.baseurl }}/assets/img/borde_3d.png"
+       alt="Resultado final de la reconstrucción 3D"
+       style="max-width: 100%; border-radius: 10px;">
+</p>
 
 Para reducir coste computacional, no se usan todos los bordes, sino un subconjunto submuestreado. Esta decisión permite disminuir el número de comparaciones sin alterar de forma significativa la estructura global de la nube reconstruida.
 
