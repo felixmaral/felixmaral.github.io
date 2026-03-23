@@ -5,5 +5,5 @@ google_analytics: G-JWPTXRXL1T
 theme: jekyll-theme-cayman
 markdown: kramdown
 kramdown:
-  math_engine: null 
+  math_engine: mathjax
 

@@ -6,11 +6,13 @@ description: "Geometría epipolar, block matching con NCC y triangulación 3D"
 
 En esta práctica se desarrolla un pipeline de reconstrucción 3D a partir de un par estéreo. El sistema combina preprocesado de imagen, detección de bordes como píxeles de interés, búsqueda de correspondencias sobre la geometría epipolar y triangulación proyectiva para generar una reconstrucción en forma de nube de puntos.
 
-Cada cámara se modela mediante una matriz de proyección compuesta por parámetros intrínsecos y extrínsecos. Esta formulación permite relacionar un punto 3D de la escena con su proyección sobre el plano imagen de cada cámara.
+Cada cámara se modela mediante una matriz de proyección compuesta por parámetros intrínsecos y extrínsecos.
 
 \[
 P = K[R \mid t]
 \]
+
+Esta formulación permite relacionar un punto 3D de la escena con su proyección sobre el plano imagen de cada cámara.
 
 \[
 x \sim P X
@@ -47,15 +49,13 @@ Para cada borde candidato de la imagen izquierda:
 2. Ese rayo se proyecta sobre la cámara derecha con `HAL.project`.
 3. A partir de dos puntos proyectados del mismo rayo se obtiene la recta epipolar.
 
-De esta manera, la búsqueda del homólogo deja de hacerse en toda la imagen derecha y queda restringida a una única trayectoria geométrica compatible con la escena.
-
-La restricción epipolar reduce el espacio de búsqueda de dos dimensiones a una dimensión. Esto hace que el proceso sea más eficiente y, además, disminuye la probabilidad de aceptar correspondencias incompatibles.
+De esta manera, la búsqueda del homólogo deja de hacerse en toda la imagen derecha y queda restringida a una única trayectoria geométrica compatible con la escena. La restricción epipolar reduce el espacio de búsqueda de dos dimensiones a una dimensión.
 
 \[
 l' = F x
 \]
 
-En esta expresión, \(x\) representa un punto en la imagen izquierda, \(l'\) su recta epipolar en la imagen derecha y \(F\) la matriz fundamental asociada al sistema estéreo.
+En esta expresión, $$x$$ representa un punto en la imagen izquierda, $$l'$$ su recta epipolar en la imagen derecha y $$F$$ la matriz fundamental asociada al sistema estéreo.
 
 ### 4. Búsqueda del homólogo
 
@@ -68,12 +68,10 @@ Una vez conocida la línea epipolar:
 - Se conserva el candidato con mayor puntuación.
 - Si la puntuación supera el umbral fijado, la correspondencia se acepta como homólogo válido.
 
-Este criterio permite priorizar precisión frente a densidad, reduciendo falsos positivos. El uso de NCC resulta adecuado en este contexto porque compara similitud estructural local y aporta una medida normalizada fácil de umbralizar.
+Este criterio permite priorizar precisión frente a densidad, reduciendo falsos positivos.
 
 \[
-\mathrm{NCC}(A,B) =
-\frac{\sum (A-\bar{A})(B-\bar{B})}
-{\sqrt{\sum (A-\bar{A})^2 \sum (B-\bar{B})^2}}
+\text{NCC}(A,B) = \frac{\sum (A-\bar{A})(B-\bar{B})}{\sqrt{\sum (A-\bar{A})^2 \sum (B-\bar{B})^2}}
 \]
 
 ### 5. Triangulación
@@ -82,41 +80,27 @@ Con los pares de puntos homólogos válidos se aplica triangulación lineal medi
 El resultado son coordenadas homogéneas 3D que después se normalizan y filtran por profundidad para eliminar puntos espurios o geométricamente inconsistentes.
 
 \[
-X_c = \mathrm{triangulate}(P_L, P_R, x_L, x_R)
+X_c = \text{triangulate}(P_L, P_R,\, x_L, x_R)
 \]
 
 \[
-X_c =
-\begin{bmatrix}
-X \\ Y \\ Z \\ W
-\end{bmatrix}
-\qquad
-\Rightarrow
-\qquad
-\left(
-\frac{X}{W},
-\frac{Y}{W},
-\frac{Z}{W}
-\right)
+X_c = \begin{bmatrix} X \\ Y \\ Z \\ W \end{bmatrix}
+\quad \Rightarrow \quad
+\left(\frac{X}{W},\, \frac{Y}{W},\, \frac{Z}{W}\right)
 \]
 
 Por último, cada punto 3D conserva el color del píxel original para visualizar una nube coloreada en la GUI.
 
-En la implementación, los puntos triangulados se obtienen inicialmente en el sistema de referencia definido por las cámaras y por sus matrices de proyección. Para representarlos de forma coherente en el visor global, es necesario aplicar la transformación correspondiente al sistema mundo.
+En la implementación, los puntos triangulados se obtienen inicialmente en el sistema de referencia definido por las cámaras. Para representarlos de forma coherente en el visor global, es necesario aplicar la transformación al sistema mundo mediante la extrínseca y su inversa.
 
 \[
-T_{wc} =
-\begin{bmatrix}
-R & t \\
-0 & 1
-\end{bmatrix}
-\qquad
+T_{wc} = \begin{bmatrix} R & t \\ 0 & 1 \end{bmatrix}
 \qquad
 T_{cw} = T_{wc}^{-1}
 \]
 
 \[
-X_w = T_{cw} X_c
+X_w = T_{cw}\, X_c
 \]
 
 Esta formulación es importante porque la posición de la cámara por sí sola no determina completamente la transformación. También es necesaria su orientación, ya que la reconstrucción depende tanto de la traslación como de la rotación.
@@ -161,4 +145,4 @@ Un umbral más bajo genera más puntos, pero también introduce más ruido; un u
 La geometría epipolar permite reducir drásticamente el espacio de búsqueda y hace viable la reconstrucción con coste moderado.  
 Además, el uso de bordes como puntos candidatos evita comparar regiones planas con poca información visual.
 
-Desde el punto de vista geométrico, la calidad final de la nube depende de tres factores principales: la validez de las correspondencias, la precisión de las matrices de proyección y la consistencia de la transformación entre coordenadas de cámara y coordenadas mundo. Por ello, una reconstrucción puede conservar correctamente la forma relativa de los objetos y, sin embargo, aparecer desplazada o mal alineada respecto al plano del suelo si la transformación extrínseca no se aplica de forma completa.
+Desde el punto de vista geométrico, la calidad final de la nube depende de tres factores principales: la validez de las correspondencias, la precisión de las matrices de proyección y la consistencia de la transformación entre coordenadas de cámara y coordenadas mundo.
