@@ -8,18 +8,18 @@ En esta práctica se desarrolla un pipeline de reconstrucción 3D a partir de un
 
 Cada cámara se modela mediante una matriz de proyección compuesta por parámetros intrínsecos y extrínsecos.
 
-\[
+$$
 P = K[R \mid t]
-\]
+$$
 
 Esta formulación permite relacionar un punto 3D de la escena con su proyección sobre el plano imagen de cada cámara.
 
-\[
+$$
 x \sim P X
-\]
+$$
 
 <p align="center">
-  <img src="{{ site.baseurl }}/assets/img/practica2_resultado.png"
+  <img src="{{ site.baseurl }}/assets/img/image_3d.png"
        alt="Resultado final de la reconstrucción 3D"
        style="max-width: 100%; border-radius: 10px;">
 </p>
@@ -51,9 +51,9 @@ Para cada borde candidato de la imagen izquierda:
 
 De esta manera, la búsqueda del homólogo deja de hacerse en toda la imagen derecha y queda restringida a una única trayectoria geométrica compatible con la escena. La restricción epipolar reduce el espacio de búsqueda de dos dimensiones a una dimensión.
 
-\[
+$$
 l' = F x
-\]
+$$
 
 En esta expresión, $$x$$ representa un punto en la imagen izquierda, $$l'$$ su recta epipolar en la imagen derecha y $$F$$ la matriz fundamental asociada al sistema estéreo.
 
@@ -70,38 +70,38 @@ Una vez conocida la línea epipolar:
 
 Este criterio permite priorizar precisión frente a densidad, reduciendo falsos positivos.
 
-\[
+$$
 \text{NCC}(A,B) = \frac{\sum (A-\bar{A})(B-\bar{B})}{\sqrt{\sum (A-\bar{A})^2 \sum (B-\bar{B})^2}}
-\]
+$$
 
 ### 5. Triangulación
 
 Con los pares de puntos homólogos válidos se aplica triangulación lineal mediante `cv2.triangulatePoints`.  
 El resultado son coordenadas homogéneas 3D que después se normalizan y filtran por profundidad para eliminar puntos espurios o geométricamente inconsistentes.
 
-\[
+$$
 X_c = \text{triangulate}(P_L, P_R,\, x_L, x_R)
-\]
+$$
 
-\[
+$$
 X_c = \begin{bmatrix} X \\ Y \\ Z \\ W \end{bmatrix}
 \quad \Rightarrow \quad
 \left(\frac{X}{W},\, \frac{Y}{W},\, \frac{Z}{W}\right)
-\]
+$$
 
 Por último, cada punto 3D conserva el color del píxel original para visualizar una nube coloreada en la GUI.
 
 En la implementación, los puntos triangulados se obtienen inicialmente en el sistema de referencia definido por las cámaras. Para representarlos de forma coherente en el visor global, es necesario aplicar la transformación al sistema mundo mediante la extrínseca y su inversa.
 
-\[
+$$
 T_{wc} = \begin{bmatrix} R & t \\ 0 & 1 \end{bmatrix}
 \qquad
 T_{cw} = T_{wc}^{-1}
-\]
+$$
 
-\[
+$$
 X_w = T_{cw}\, X_c
-\]
+$$
 
 Esta formulación es importante porque la posición de la cámara por sí sola no determina completamente la transformación. También es necesaria su orientación, ya que la reconstrucción depende tanto de la traslación como de la rotación.
 
