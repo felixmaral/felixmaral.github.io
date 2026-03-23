@@ -6,6 +6,12 @@ description: "Geometría epipolar, block matching con NCC y triangulación 3D"
 
 En esta práctica se desarrolla un pipeline de reconstrucción 3D a partir de un par estéreo. El sistema combina preprocesado de imagen, detección de bordes como píxeles de interés, búsqueda de correspondencias sobre la geometría epipolar y triangulación proyectiva para generar una reconstrucción en forma de nube de puntos.
 
+<p align="center">
+  <img src="{{ site.baseurl }}/assets/img/image_3d.png"
+       alt="Resultado final de la reconstrucción 3D"
+       style="max-width: 100%; border-radius: 10px;">
+</p>
+
 Cada cámara se modela mediante una matriz de proyección compuesta por parámetros intrínsecos y extrínsecos.
 
 $$
@@ -18,11 +24,7 @@ $$
 x \sim P X
 $$
 
-<p align="center">
-  <img src="{{ site.baseurl }}/assets/img/image_3d.png"
-       alt="Resultado final de la reconstrucción 3D"
-       style="max-width: 100%; border-radius: 10px;">
-</p>
+
 
 ### Preprocesado
 
