@@ -24,9 +24,9 @@ $$
        style="max-width: 100%; border-radius: 10px;">
 </p>
 
-### 1. Preprocesado
+### Preprocesado
 
-Cada imagen se procesa para mejorar la calidad de los bordes y aumentar la estabilidad de las comparaciones locales:
+Este apartado en este contexto no es necesario ya que partimos de un simulador en el que no existen condiciones que generen ruido en las imágenes capturadas, pero son buenas prácticas en el contexto de la extracción precisa de bordes. Cada imagen se procesa para mejorar la calidad de los bordes y aumentar la estabilidad de las comparaciones locales:
 
 - Se aplica CLAHE sobre el canal de luminancia para mejorar el contraste local.
 - Después se usa un filtro bilateral para reducir ruido sin degradar contornos.
@@ -34,14 +34,13 @@ Cada imagen se procesa para mejorar la calidad de los bordes y aumentar la estab
 
 Este paso mejora la estabilidad del matching en zonas con iluminación irregular, textura poco uniforme y cambios locales de contraste.
 
-### 2. Extracción de bordes
+### Extracción de bordes
 
-Sobre las imágenes preprocesadas se aplica el detector de Canny.  
-Los píxeles de borde de la imagen izquierda actúan como puntos candidatos, mientras que los bordes de la derecha restringen las zonas donde merece la pena evaluar correspondencias.
+Sobre las imágenes preprocesadas se aplica el detector de Canny. Los píxeles de borde de la imagen izquierda actúan como puntos candidatos, mientras que los bordes de la derecha restringen las zonas donde merece la pena evaluar correspondencias.
 
 Para reducir coste computacional, no se usan todos los bordes, sino un subconjunto submuestreado. Esta decisión permite disminuir el número de comparaciones sin alterar de forma significativa la estructura global de la nube reconstruida.
 
-### 3. Cálculo de la línea epipolar
+### Cálculo de la línea epipolar
 
 Para cada borde candidato de la imagen izquierda:
 
@@ -57,7 +56,7 @@ $$
 
 En esta expresión, $$x$$ representa un punto en la imagen izquierda, $$l'$$ su recta epipolar en la imagen derecha y $$F$$ la matriz fundamental asociada al sistema estéreo.
 
-### 4. Búsqueda del homólogo
+### Búsqueda del homólogo
 
 Una vez conocida la línea epipolar:
 
@@ -74,10 +73,9 @@ $$
 \text{NCC}(A,B) = \frac{\sum (A-\bar{A})(B-\bar{B})}{\sqrt{\sum (A-\bar{A})^2 \sum (B-\bar{B})^2}}
 $$
 
-### 5. Triangulación
+### Triangulación
 
-Con los pares de puntos homólogos válidos se aplica triangulación lineal mediante `cv2.triangulatePoints`.  
-El resultado son coordenadas homogéneas 3D que después se normalizan y filtran por profundidad para eliminar puntos espurios o geométricamente inconsistentes.
+Con los pares de puntos homólogos válidos se aplica triangulación lineal mediante `cv2.triangulatePoints`. El resultado son coordenadas homogéneas 3D que después se normalizan y filtran por profundidad para eliminar puntos espurios o geométricamente inconsistentes.
 
 $$
 X_c = \text{triangulate}(P_L, P_R,\, x_L, x_R)
@@ -105,7 +103,7 @@ $$
 
 Esta formulación es importante porque la posición de la cámara por sí sola no determina completamente la transformación. También es necesaria su orientación, ya que la reconstrucción depende tanto de la traslación como de la rotación.
 
-## Parámetros principales
+## Parámetros seleccionados
 
 | Parámetro | Valor | Función |
 |---|---:|---|
@@ -113,14 +111,12 @@ Esta formulación es importante porque la posición de la cámara por sí sola n
 | `PATCH` | 18 | Tamaño del bloque usado en la comparación |
 | `DISPARITY` | 90 | Alcance máximo de búsqueda sobre la epipolar |
 | `SPARSE_STEP` | 3 | Submuestreo de bordes candidatos |
-| `Z_NEAR` | -100 | Límite cercano de profundidad válida |
-| `Z_FAR` | -10000 | Límite lejano de profundidad válida |
 
-Estos parámetros controlan el equilibrio entre densidad, precisión y coste computacional. En particular, el tamaño del parche y el umbral de correlación influyen directamente en la robustez del matching local.
+Estos parámetros controlan el equilibrio entre densidad, precisión y coste computacional. En particular, el tamaño del parche, el umbral de correlación y la disparidad máxima influyen directamente en la robustez del matching local.
 
 ## Resultados
 
-El resultado final es una nube de puntos sparse pero geométricamente coherente, suficiente para identificar la estructura espacial principal de la escena. La selección conservadora de correspondencias reduce el ruido y evita gran parte de los puntos erróneos.
+El resultado final es una nube de puntos geométricamente coherente con el mundo simulado, suficiente para identificar la estructura espacial principal de la escena. La selección conservadora de correspondencias reduce el ruido y evita gran parte de los puntos erróneos.
 
 A continuación se muestra una grabación de la ejecución del sistema durante la reconstrucción:
 
@@ -139,10 +135,8 @@ A continuación se muestra una grabación de la ejecución del sistema durante l
 
 ## Observaciones
 
-El comportamiento del sistema depende de forma directa del umbral de correlación y del tamaño del parche.  
-Un umbral más bajo genera más puntos, pero también introduce más ruido; un umbral alto produce una nube más limpia, aunque menos densa.
+El comportamiento del sistema depende de forma directa del umbral de correlación y del tamaño del parche. Un umbral más bajo genera más puntos, pero también introduce más ruido. Un umbral alto produce una nube más limpia, aunque menos densa.
 
-La geometría epipolar permite reducir drásticamente el espacio de búsqueda y hace viable la reconstrucción con coste moderado.  
-Además, el uso de bordes como puntos candidatos evita comparar regiones planas con poca información visual.
+La geometría epipolar permite reducir drásticamente el espacio de búsqueda y hace viable la reconstrucción con coste moderado. Además, el uso de bordes submuestreados como puntos de interés reduce drásticamente el coste computacional.
 
 Desde el punto de vista geométrico, la calidad final de la nube depende de tres factores principales: la validez de las correspondencias, la precisión de las matrices de proyección y la consistencia de la transformación entre coordenadas de cámara y coordenadas mundo.
