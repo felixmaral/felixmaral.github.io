@@ -38,7 +38,7 @@ Este paso mejora la estabilidad del matching en zonas con iluminación irregular
 Sobre las imágenes preprocesadas se aplica el detector de Canny. Los píxeles de borde de la imagen izquierda actúan como puntos candidatos, mientras que los bordes de la derecha restringen las zonas donde merece la pena evaluar correspondencias.
 
 <p align="center">
-  <img src="{{ site.baseurl }}/assets/img/borde_3d.png"
+  <img src="{{ site.baseurl }}/assets/img/borde-3d.png"
        alt="Resultado final de la reconstrucción 3D"
        style="max-width: 100%; border-radius: 10px;">
 </p>
