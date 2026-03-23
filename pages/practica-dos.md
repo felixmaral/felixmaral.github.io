@@ -127,8 +127,8 @@ A continuación se muestra una grabación de la ejecución del sistema durante l
 
 <div style="display:flex; justify-content:center; margin: 24px 0;">
   <iframe
-    width="560"
-    height="315"
+    width="800"
+    height="600"
     src="https://www.youtube.com/embed/jxtoJIxgQDs?si=Kb2VZ4MPm9Pqka6p"
     title="YouTube video player"
     frameborder="0"
