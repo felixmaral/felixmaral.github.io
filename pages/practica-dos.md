@@ -12,13 +12,11 @@ En esta práctica se desarrolla un pipeline de reconstrucción 3D a partir de un
        style="max-width: 100%; border-radius: 10px;">
 </p>
 
-Cada cámara se modela mediante una matriz de proyección compuesta por parámetros intrínsecos y extrínsecos.
+Cada cámara se modela mediante una matriz de proyección compuesta por parámetros intrínsecos y extrínsecos. Esta formulación permite relacionar un punto 3D de la escena con su proyección sobre el plano imagen de cada cámara.
 
 $$
 P = K[R \mid t]
 $$
-
-Esta formulación permite relacionar un punto 3D de la escena con su proyección sobre el plano imagen de cada cámara.
 
 $$
 x \sim P X
