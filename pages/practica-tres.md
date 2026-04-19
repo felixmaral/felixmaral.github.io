@@ -21,11 +21,11 @@ El sistema procesa los datos del escáner láser (`HAL.getLaserData()`), segment
 1.  **Estado RECTO**: El robot avanza con una velocidad lineal constante (`vel_lineal`). Si la lectura mínima del sector frontal cae por debajo del umbral de seguridad (`seguridad_frontal`), el robot se detiene y transita al estado `GIRO`.
 2.  **Estado GIRO**: El robot gira sobre su eje vertical. La dirección de giro se decide dinámicamente evaluando qué sector lateral (izquierdo o derecho) presenta mayor espacio libre. El giro se mantiene hasta que el sector frontal vuelve a superar la distancia de seguridad.
 
-**Experimentación de parámetros:** Durante el desarrollo, se probaron distintas configuraciones de los parámetros para probar distintos resultados en la deambulación y así comprobar mejor el algoritmo de autolocalización, como objetivo de esta práctica.
+**Experimentación:** Durante el desarrollo, se probaron distintas configuraciones de los parámetros para probar distintos resultados en la deambulación y así comprobar mejor el algoritmo de autolocalización, como objetivo de esta práctica. Posteriormente también se probaron distintos algoritmos de deambulación algo más complejos basados en los sensores y procesos aleatorios de giro.
 
 ### Transformaciones Geométricas
 
-Para que la estimación de pose tenga sentido en el sistema global, es imperativo establecer las relaciones entre los distintos sistemas de coordenadas: el Mundo ($W$), la Cámara ($C$) y el Robot ($R$).
+Para que la estimación de pose tenga sentido en el sistema global, es importante establecer las relaciones entre los distintos sistemas de coordenadas: el Mundo ($W$), la Cámara ($C$) y el Robot ($R$).
 
 La cámara de OpenCV asume un sistema donde el eje X apunta a la derecha, el eje Y hacia abajo y el eje Z hacia adelante. El robot, sin embargo, utiliza X hacia adelante, Y a la izquierda y Z hacia arriba. Se realiza un cambio de base para compensar esta discrepancia.
 
@@ -78,20 +78,12 @@ El flujo de ejecución decide la pose final ponderando las fuentes:
 
 ## Resultados y Observaciones
 
-Mientras que la odometría acumula deriva con el tiempo, la visión actúa como un corrector que anula este error sistemático. A su vez, la odometría filtra los saltos espurios inherentes a la estimación monocular de marcadores lejanos.
+Mientras que la odometría acumula error con el tiempo, la visión actúa como un corrector que anula este error sistemático. A su vez, la odometría filtra los saltos espurios inherentes a la estimación  de marcadores lejanos.
 
-A continuación se muestra el comportamiento del robot en el simulador durante una rutina completa de exploración y autolocalización:
+A continuación se muestra el comportamiento del robot en el simulador, donde se aprecia como la estimacióninicial al estar alejado de las balizas es buena en orientación pero no tanto en distancia a la baliza. Tras avanzar se va corrigiendo la posición estimada debido a que aumenta la precisión del cálculo al utilizar detecciones más grandes. Cuando no se detectan balizas la estimación odométrica permite continuar con la estimación relativamente bien. En la primera imagen de esta documentación se puede observar como en el tramo final mantiene una estimación precisa solo con la estimación odométrica a partir de la ultima estimación visual.
 
-<div style="display:flex; justify-content:center; margin: 24px 0;">
-  <iframe
-    width="800"
-    height="600"
-    src="https://www.youtube.com/embed/PLACEHOLDER_VIDEO_ID"
-    title="YouTube video player"
-    frameborder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen>
-  </iframe>
-</div>
-
-La experimentación ha demostrado que el uso concurrente de múltiples balizas reduce la varianza en la estimación del *yaw* (orientación) en un factor significativo comparado con la observación de una única baliza escorada. Las técnicas de penalización implementadas mitigan por completo el fenómeno de "volteo" (flip) característico de la resolución analítica del PnP plano.
+<p align="center">
+  <img src="{{ site.baseurl }}/assets/img/estimacion.png"
+       alt="Resultado de la autolocalización y navegación"
+       style="max-width: 100%; border-radius: 10px;">
+</p>
