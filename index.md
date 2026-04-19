@@ -6,3 +6,5 @@ layout: default
 
 [Link to P2](./pages/practica-dos.html)
 
+
+[Link to P3](./pages/practica-tres.html)
