@@ -1,7 +1,7 @@
 ---
 layout: default
-title: "Práctica · Autolocalización Visual con AprilTags"
-description: "Navegación reactiva, estimación de pose mediante PnP y fusión de visión con odometría"
+title: "Práctica · Autolocalización Visual"
+description: "Estimación de pose mediante PnP, Autolocalización con fusión odométrica, Navegación básica"
 ---
 
 En esta práctica se desarrolla un sistema robusto de autolocalización global para un robot móvil utilizando balizas visuales. El pipeline combina la detección de marcadores, la resolución del problema de la perspectiva de *n* puntos (PnP) para la estimación de la pose de la cámara, transformaciones geométricas entre sistemas de referencia y una lógica híbrida que apoya la visión con estimaciones odométricas. Simultáneamente, el robot ejecuta un algoritmo de navegación reactiva para explorar el entorno y comprobar el funcionamiento de la autolocalización.
