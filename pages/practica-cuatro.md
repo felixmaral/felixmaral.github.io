@@ -6,18 +6,7 @@ description: "Behavior Cloning, PilotNet, seguimiento de línea roja con red neu
 
 En esta práctica se aborda el mismo problema que en P1 —gobernar un coche de Fórmula 1 equipado con cámara frontal para que siga una línea roja en el circuito— pero mediante una aproximación de Deep Learning basada en **Behavior Cloning**. En lugar de programar explícitamente un controlador PID con procesado OpenCV, se recoge un dataset supervisado de un piloto experto, se entrena una red neuronal con ese dataset y, en tiempo de ejecución, la red infiere directamente la velocidad lineal (V) y la velocidad angular (W) a partir de la imagen de cámara.
 
-<div style="display:flex; justify-content:center; margin: 24px 0;">
-  <iframe
-    width="800"
-    height="450"
-    src="https://www.youtube.com/embed/VIDEO_ID_AQUI"
-    title="Coche de F1 siguiendo la línea roja · Práctica 4"
-    frameborder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-    referrerpolicy="strict-origin-when-cross-origin"
-    allowfullscreen>
-  </iframe>
-</div>
+
 
 ### Dataset
 
@@ -87,22 +76,6 @@ El ciclo de vida de cada experimento está encapsulado en la función `run_exper
 7. **Early-model**: Se guarda el `state_dict` del modelo que alcanza la menor pérdida de validación.
 8. **Evaluación final**: El mejor modelo se evalúa sobre el split de test, calculando R² global y por franjas de **w**.
 
-#### Métricas segmentadas
-
-Además del R² global, se calcula el R² de la predicción de **w** por separado en cinco franjas:
-
-| Franja | Rango de w |
-| :--- | :---: |
-| `straight` | (-0.2, 0.2) |
-| `curve_l_L` | (-1.0, -0.2) |
-| `curve_l_R` | (0.2, 1.0) |
-| `curve_h_L` | (-∞, -1.0) |
-| `curve_h_R` | (1.0, +∞) |
-
-Esta descomposición permite identificar si el modelo aprende bien en rectas pero falla en curvas pronunciadas, lo que sería un indicador claro de que el oversampling es insuficiente o de que la arquitectura no tiene capacidad suficiente para representar ese régimen dinámico.
-
-Se genera adicionalmente un mapa de activaciones **Grad-CAM** sobre la última capa convolucional, que permite verificar visualmente si la red atiende a la línea roja o a regiones espurias del fondo.
-
 ### Resultados del Grid Search
 
 A continuación se presentan los resultados comparativos de las cuatro arquitecturas evaluadas, con entrada RGB y máscara binaria de la línea roja, entrenadas con distintas combinaciones de crop, aumentado de datos y oversampling:
@@ -119,17 +92,19 @@ Las configuraciones que incluyen **crop + augmentación + segmentación roja** (
 
 El experimento seleccionado como mejor solución es **`EfficientNet_crop_aug_redseg`** con oversampling. Aunque no es el que mayor R² obtiene en test en valores absolutos, es el que presenta el comportamiento cualitativo más estable durante la conducción en varios circuitos: sin apenas oscilaciones en la trayectoria, muy reactivo a los giros, y con una velocidad prácticamente constante en torno a 4 m/s con pequeñas subidas espontáneas en las rectas largas, un patrón aprendido directamente del comportamiento del agente experto en el dataset. Los demás experimentos también completan el circuito correctamente, pero presentan mayor varianza en la trayectoria o reaccionan con ligero retraso en curvas pronunciadas.
 
-### Bucle Reactivo de Inferencia
+### Inferencia en Unibotics
 
-La aplicación robótica ejecuta un bucle infinito que en cada iteración:
+El script de inferencia (`E2E.py`) es el que se ejecuta en el simulador Unibotics. Al arrancar, lee `experiment_log.json` del directorio del experimento para saber qué arquitectura se usó y qué flags de preprocesado están activos (`crop`, `red_segment`). Después carga `model.onnx` con `onnxruntime` y consulta directamente la forma de entrada del modelo para determinar el número de canales y la resolución esperada, de modo que la configuración siempre es coherente con el modelo y no depende de que el JSON esté bien escrito.
 
-1. Captura la imagen de la cámara frontal con `HAL.getImage()`.
-2. Aplica las mismas transformaciones de preprocesado usadas en entrenamiento (crop, segmentación roja si aplica, resize a la resolución de entrada de la red).
-3. Convierte la imagen a tensor normalizado [0, 1] y la pasa por la red entrenada (`model(img_tensor)`).
-4. Extrae las dos salidas de la red: **w** predicho y **v** predicho.
-5. Envía los valores a los actuadores: `HAL.setV(v_pred)` y `HAL.setW(w_pred)`.
+El bucle principal ejecuta en cada iteración:
 
-Este paradigma reactivo elimina cualquier lógica de control explícita: la política de conducción queda completamente implícita en los pesos de la red, aprendida por imitación del experto.
+1. `HAL.getImage()` captura la imagen BGR de la cámara frontal.
+2. La función `preprocess` aplica el mismo pipeline usado en entrenamiento: BGR a RGB, crop del 40 % superior si corresponde, máscara binaria de rojo en HSV si el modelo es de 1 canal, resize al tamaño de entrada del modelo, transposición HWC a CHW y normalización a [0, 1].
+3. `session.run()` ejecuta la inferencia ONNX y devuelve dos valores: **w** (velocidad angular) y **v** (velocidad lineal).
+4. `HAL.setW(w)` y `HAL.setV(v)` envían los comandos al robot.
+5. `WebGUI.showImage()` muestra en el visor la imagen con un HUD superpuesto que indica la arquitectura, configuración activa y los valores de **w** y **v** inferidos en ese frame, además de una barra de steering en la parte inferior.
+
+No hay ningún controlador PID ni lógica de decisión adicional. La política de conducción queda completamente en los pesos del modelo.
 
 ## Parámetros de Configuración
 
@@ -176,3 +151,18 @@ La siguiente gráfica muestra los valores reales frente a los predichos por el m
        alt="Scatter real vs predicho del experimento EXP_PilotNet_crop: steering (w) y velocidad (v) en train, val y test con R²≈0.97"
        style="max-width: 100%; border-radius: 10px;">
 </p>
+
+### Demostración en pista
+
+<div style="display:flex; justify-content:center; margin: 24px 0;">
+  <iframe
+    width="800"
+    height="450"
+    src="https://www.youtube.com/embed/VIDEO_ID_AQUI"
+    title="Coche de F1 siguiendo la línea roja · Práctica 4"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen>
+  </iframe>
+</div>
