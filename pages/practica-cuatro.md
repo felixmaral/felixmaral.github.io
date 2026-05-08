@@ -4,13 +4,7 @@ title: "Práctica 4 · Conducción Autónoma con Deep Learning"
 description: "Behavior Cloning, PilotNet, seguimiento de línea roja con red neuronal entrenada sobre dataset supervisado"
 ---
 
-En esta práctica se aborda el mismo problema que en P1 —gobernar un coche de Fórmula 1 equipado con cámara frontal para que siga una línea roja en el circuito— pero mediante una aproximación de Deep Learning basada en **Behavior Cloning**. En lugar de programar explícitamente un controlador PID con procesado OpenCV, se recoge un dataset supervisado de un piloto experto, se entrena una red neuronal con ese dataset y, en tiempo de ejecución, la red infiere directamente la velocidad lineal ($V$) y la velocidad angular ($W$) a partir de la imagen de cámara.
-
-<p align="center">
-  <img src="{{ site.baseurl }}/assets/img/p4_f1_circuit.png"
-       alt="Vista desde la cámara frontal del coche de F1 siguiendo la línea roja del circuito"
-       style="max-width: 100%; border-radius: 10px;">
-</p>
+En esta práctica se aborda el mismo problema que en P1 —gobernar un coche de Fórmula 1 equipado con cámara frontal para que siga una línea roja en el circuito— pero mediante una aproximación de Deep Learning basada en **Behavior Cloning**. En lugar de programar explícitamente un controlador PID con procesado OpenCV, se recoge un dataset supervisado de un piloto experto, se entrena una red neuronal con ese dataset y, en tiempo de ejecución, la red infiere directamente la velocidad lineal (V) y la velocidad angular (W) a partir de la imagen de cámara.
 
 <div style="display:flex; justify-content:center; margin: 24px 0;">
   <iframe
@@ -27,11 +21,11 @@ En esta práctica se aborda el mismo problema que en P1 —gobernar un coche de 
 
 ### Dataset
 
-El punto de partida es el dataset público de JDeRobot, grabado por un agente experto que recorre el circuito siguiendo satisfactoriamente la línea roja. Cada muestra del dataset es un par $(imagen, (w, v))$, donde $w$ es la velocidad angular y $v$ la velocidad lineal en ese instante.
+El punto de partida es el dataset público de JDeRobot, grabado por un agente experto que recorre el circuito siguiendo satisfactoriamente la línea roja. Cada muestra del dataset es un par (imagen, (w, v)), donde **w** es la velocidad angular y **v** la velocidad lineal en ese instante.
 
-**Análisis de la distribución:** Existe un balanceo de curvas (los dos picos menores son muy parecidos, en las curvas). El dataset presenta un fuerte sesgo, la distribución de $w$ está muy concentrada en torno a cero, mientras que las curvas pronunciadas (valores de $|w| > 0.5$) son comparativamente escasas aunque con 2 picos balanceados. La distribución de $v$ está casi íntegramente centrada en torno a $4.0$, con muy pocos ejemplos en el rango $[4, 7]$ (siendo $7$ la velocidad máxima registrada). Este desequilibrio entre rectas y curvas, aun existiendo un balanceo de curva izq/dcha, penaliza la capacidad del modelo para generalizar en curvas.
+**Análisis de la distribución:** Existe un balanceo de curvas (los dos picos menores son muy parecidos, en las curvas). El dataset presenta un fuerte sesgo, la distribución de **w** está muy concentrada en torno a cero, mientras que las curvas pronunciadas (valores de `|w| > 0.5`) son comparativamente escasas aunque con 2 picos balanceados. La distribución de **v** está casi íntegramente centrada en torno a 4.0, con muy pocos ejemplos en el rango [4, 7] (siendo 7 la velocidad máxima registrada). Este desequilibrio entre rectas y curvas, aun existiendo un balanceo de curva izq/dcha, penaliza la capacidad del modelo para generalizar en curvas.
 
-**Particionado:** Se divide el dataset en tres splits —`train`, `val`, `test`— exportados como archivos CSV que registran la ruta relativa de imagen y los valores $(w, v)$ correspondientes:
+**Particionado:** Se divide el dataset en tres splits —`train`, `val`, `test`— exportados como archivos CSV que registran la ruta relativa de imagen y los valores (w, v) correspondientes:
 
 ```
 splits/
@@ -50,13 +44,13 @@ splits/
 
 ### Balanceo y Oversampling
 
-Conocido el desbalanceo de rectas y curvas, se aplica una estrategia de **oversampling ×2** sobre las muestras con $|w| > 0.5$ (umbral que separa rectas de curvas experimentalmente visto en el simulador). El mecanismo se implementa mediante `WeightedRandomSampler` de PyTorch, que asigna pesos inversamente proporcionales a la frecuencia de cada clase:
+Conocido el desbalanceo de rectas y curvas, se aplica una estrategia de **oversampling ×2** sobre las muestras con `|w| > 0.5` (umbral que separa rectas de curvas experimentalmente visto en el simulador). El mecanismo se implementa mediante `WeightedRandomSampler` de PyTorch, que asigna pesos inversamente proporcionales a la frecuencia de cada clase:
 
-$$
-p_i = \frac{1}{N_{clase(i)}}
-$$
+```
+p_i = 1 / N_clase(i)
+```
 
-Con esto, cada época de entrenamiento presenta aproximadamente el mismo número de muestras de las tres franjas de interés: recta ($|w| \leq 0.2$), curva suave y curva pronunciada. El ratio de peso curva/recta es $\approx 2\times$, lo que equivale a doblar la presencia efectiva de las curvas en cada batch.
+Con esto, cada época de entrenamiento presenta aproximadamente el mismo número de muestras de las tres franjas de interés: recta (`|w| ≤ 0.5`), curva suave y curva pronunciada. El ratio de peso curva/recta es ≈2×, lo que equivale a doblar la presencia efectiva de las curvas en cada batch.
 
 ### Preprocesado y Aumentado de Datos
 
@@ -66,22 +60,14 @@ El pipeline de preprocesado y aumentado se configura de forma modular mediante f
 | :--- | :--- |
 | `--crop` | Recorta el 40 % superior de la imagen, eliminando el horizonte y el cielo para que la red se centre en el asfalto. |
 | `--red_segment` | Aplica segmentación cromática en espacio HSV para aislar la línea roja y convertir la imagen a 1 canal. Reduce ruido de fondo. |
-| `--augment` | Activa aumentado estocástico: volteo horizontal con inversión de $w$, variación aleatoria de brillo y proyección de sombras sintéticas. |
+| `--augment` | Activa aumentado estocástico: volteo horizontal con inversión de **w**, variación aleatoria de brillo y proyección de sombras sintéticas. |
 | `--oversample` | Activa el `WeightedRandomSampler` descrito anteriormente. |
 
-El volteo horizontal se implementa de manera consistente: cuando una imagen se voltea, el signo de $w$ también se invierte, de modo que el dato etiquetado sigue siendo válido. Esto dobla efectivamente el número de ejemplos de curva sin introducir sesgo.
-
-A continuación se muestra el resultado de aplicar la segmentación cromática de rojo (`--red_segment`) sobre una imagen de cámara del simulador. La máscara binaria resultante, con canal único, es la entrada real que recibe la red:
-
-<p align="center">
-  <img src="{{ site.baseurl }}/assets/img/p4_red_segment.png"
-       alt="Resultado de la segmentación cromática de la línea roja: máscara binaria de un canal usada como entrada a la red"
-       style="max-width: 50%; border-radius: 10px;">
-</p>
+El volteo horizontal se implementa de manera consistente: cuando una imagen se voltea, el signo de **w** también se invierte, de modo que el dato etiquetado sigue siendo válido. Esto dobla efectivamente el número de ejemplos de curva sin introducir sesgo.
 
 ### Arquitecturas Evaluadas
 
-Se evaluaron cuatro arquitecturas en un grid search comparativo, todas con salida de dos neuronas lineales ($w$, $v$):
+Se evaluaron cuatro arquitecturas en un grid search comparativo, todas con salida de dos neuronas lineales (w, v):
 
 - **PilotNet**: Red convolucional ligera inspirada en el trabajo original de NVIDIA para conducción autónoma. Compuesta por 5 capas convolucionales seguidas de 4 capas fully-connected. Referencia clásica en behavior cloning.
 - **MobileNetRegressor**: Backbone MobileNetV2 preentrenado en ImageNet con cabezal de regresión. Alta eficiencia computacional.
@@ -95,39 +81,27 @@ El ciclo de vida de cada experimento está encapsulado en la función `run_exper
 1. **Carga de datos**: Se instancian los `DrivingDataset` de train y val con las transformaciones activas.
 2. **Dataloader**: Si `oversample=True` se usa `WeightedRandomSampler`; en otro caso, `shuffle=True` estándar.
 3. **Modelo**: Se instancia la arquitectura elegida y se mueve a GPU si está disponible.
-4. **Optimizador y scheduler**: `AdamW` con `weight_decay=1e-5` y `ReduceLROnPlateau` que reduce el learning rate por un factor $0.5$ si la pérdida de validación no mejora en 3 épocas.
-5. **Función de pérdida**: `MSELoss` sobre el vector $(w, v)$.
-6. **Loop de entrenamiento**: Para cada época se ejecutan una fase de train con gradientes y una de validación en modo `eval`. Se registra la pérdida y el $R^2$ global y segmentado.
+4. **Optimizador y scheduler**: `AdamW` con `weight_decay=1e-5` y `ReduceLROnPlateau` que reduce el learning rate por un factor 0.5 si la pérdida de validación no mejora en 3 épocas.
+5. **Función de pérdida**: `MSELoss` sobre el vector (w, v).
+6. **Loop de entrenamiento**: Para cada época se ejecutan una fase de train con gradientes y una de validación en modo `eval`. Se registra la pérdida y el R² global y segmentado.
 7. **Early-model**: Se guarda el `state_dict` del modelo que alcanza la menor pérdida de validación.
-8. **Evaluación final**: El mejor modelo se evalúa sobre el split de test, calculando $R^2$ global y por franjas de $w$.
+8. **Evaluación final**: El mejor modelo se evalúa sobre el split de test, calculando R² global y por franjas de **w**.
 
 #### Métricas segmentadas
 
-Además del $R^2$ global, se calcula el $R^2$ de la predicción de $w$ por separado en cinco franjas:
+Además del R² global, se calcula el R² de la predicción de **w** por separado en cinco franjas:
 
-| Franja | Rango de $w$ |
+| Franja | Rango de w |
 | :--- | :---: |
-| `straight` | $(-0.2,\ 0.2)$ |
-| `curve_l_L` | $(-1.0,\ -0.2)$ |
-| `curve_l_R` | $(0.2,\ 1.0)$ |
-| `curve_h_L` | $(-\infty,\ -1.0)$ |
-| `curve_h_R` | $(1.0,\ +\infty)$ |
+| `straight` | (-0.2, 0.2) |
+| `curve_l_L` | (-1.0, -0.2) |
+| `curve_l_R` | (0.2, 1.0) |
+| `curve_h_L` | (-∞, -1.0) |
+| `curve_h_R` | (1.0, +∞) |
 
 Esta descomposición permite identificar si el modelo aprende bien en rectas pero falla en curvas pronunciadas, lo que sería un indicador claro de que el oversampling es insuficiente o de que la arquitectura no tiene capacidad suficiente para representar ese régimen dinámico.
 
-<p align="center">
-  <img src="{{ site.baseurl }}/assets/img/p4_training_curves.png"
-       alt="Curvas de entrenamiento del experimento EXP_PilotNet_crop: MSE Loss, R²(w) y R²(v) sobre train y validación"
-       style="max-width: 100%; border-radius: 10px;">
-</p>
-
 Se genera adicionalmente un mapa de activaciones **Grad-CAM** sobre la última capa convolucional, que permite verificar visualmente si la red atiende a la línea roja o a regiones espurias del fondo.
-
-<p align="center">
-  <img src="{{ site.baseurl }}/assets/img/p4_gradcam.png"
-       alt="Grad-CAM sobre PilotNet: la red activa intensamente sobre la línea roja del circuito para predecir el steering"
-       style="max-width: 100%; border-radius: 10px;">
-</p>
 
 ### Resultados del Grid Search
 
@@ -139,11 +113,11 @@ A continuación se presentan los resultados comparativos de las cuatro arquitect
        style="max-width: 100%; border-radius: 10px;">
 </p>
 
-**Interpretación cualitativa de los resultados.** La evaluación cuantitativa sobre el split de test no es suficiente por sí sola para seleccionar el mejor modelo. El dataset completo ha sido recogido sobre un **único circuito**, lo que implica que un modelo con suficiente capacidad puede obtener métricas muy altas en test simplemente memorizando las imágenes del trazado, sin haber aprendido a generalizar a nuevos circuitos. Esto se observa especialmente en los modelos sin aumentado de datos: sus $R^2$ sobre test son elevados, pero al ejecutarlos en otros circuitos muestran titubeos y pérdidas de línea frecuentes.
+**Interpretación cualitativa de los resultados.** La evaluación cuantitativa sobre el split de test no es suficiente por sí sola para seleccionar el mejor modelo. El dataset completo ha sido recogido sobre un **único circuito**, lo que implica que un modelo con suficiente capacidad puede obtener métricas muy altas en test simplemente memorizando las imágenes del trazado, sin haber aprendido a generalizar a nuevos circuitos. Esto se observa especialmente en los modelos sin aumentado de datos: sus R² sobre test son elevados, pero al ejecutarlos en otros circuitos muestran titubeos y pérdidas de línea frecuentes.
 
 Las configuraciones que incluyen **crop + augmentación + segmentación roja** (`_crop_aug_redseg`) rompen esta dependencia del aspecto visual exacto del circuito entrenado: el volteo horizontal fuerza invarianza izquierda-derecha, las sombras sintéticas reducen la sensibilidad a cambios de iluminación y el recorte del horizonte elimina ruido para el modelo. El resultado es un modelo que **generaliza** en lugar de memorizar. Aprendiendo sobre la máscara binaria evitamos tener que depender de muchos mas datos y utilizar una caracteristica general en todos los circuitos.
 
-El experimento seleccionado como mejor solución es **`EfficientNet_crop_aug_redseg`**. Con oversampling. Aunque no es el que mayor $R^2$ obtiene en test en valores absolutos, es el que presenta el comportamiento cualitativo más estable durante la conducción en varios circuitos: sin apenas oscilaciones en la trayectoria, muy reactivo a los giros, y con una velocidad prácticamente constante en torno a $4\ \text{m/s}$ con pequeñas subidas espontáneas en las rectas largas, un patrón aprendido directamente del comportamiento del agente experto en el dataset. Los demás experimentos también completan el circuito correctamente, pero presentan mayor varianza en la trayectoria o reaccionan con ligero retraso en curvas pronunciadas.
+El experimento seleccionado como mejor solución es **`EfficientNet_crop_aug_redseg`** con oversampling. Aunque no es el que mayor R² obtiene en test en valores absolutos, es el que presenta el comportamiento cualitativo más estable durante la conducción en varios circuitos: sin apenas oscilaciones en la trayectoria, muy reactivo a los giros, y con una velocidad prácticamente constante en torno a 4 m/s con pequeñas subidas espontáneas en las rectas largas, un patrón aprendido directamente del comportamiento del agente experto en el dataset. Los demás experimentos también completan el circuito correctamente, pero presentan mayor varianza en la trayectoria o reaccionan con ligero retraso en curvas pronunciadas.
 
 ### Bucle Reactivo de Inferencia
 
@@ -151,8 +125,8 @@ La aplicación robótica ejecuta un bucle infinito que en cada iteración:
 
 1. Captura la imagen de la cámara frontal con `HAL.getImage()`.
 2. Aplica las mismas transformaciones de preprocesado usadas en entrenamiento (crop, segmentación roja si aplica, resize a la resolución de entrada de la red).
-3. Convierte la imagen a tensor normalizado $[0, 1]$ y la pasa por la red entrenada (`model(img_tensor)`).
-4. Extrae las dos salidas de la red: $\hat{w}$ y $\hat{v}$.
+3. Convierte la imagen a tensor normalizado [0, 1] y la pasa por la red entrenada (`model(img_tensor)`).
+4. Extrae las dos salidas de la red: **w** predicho y **v** predicho.
 5. Envía los valores a los actuadores: `HAL.setV(v_pred)` y `HAL.setW(w_pred)`.
 
 Este paradigma reactivo elimina cualquier lógica de control explícita: la política de conducción queda completamente implícita en los pesos de la red, aprendida por imitación del experto.
@@ -168,7 +142,7 @@ Este paradigma reactivo elimina cualquier lógica de control explícita: la pol�
 | `lr_patience` | 3 | Épocas sin mejora para activar el scheduler. |
 | `weight_decay` | 1e-5 | Regularización L2 del optimizador. |
 | `input_size` | 128×128 | Resolución de entrada a la red. |
-| `oversample_thr` | 0.5 | Umbral $|w|$ para el oversampling. |
+| `oversample_thr` | 0.5 | Umbral `|w|` para el oversampling. |
 | `crop_percent` | 0.4 | Fracción superior de imagen eliminada. |
 
 ## Resultados y Observaciones
@@ -179,7 +153,23 @@ El oversampling es determinante para el comportamiento en curvas: sin él, el co
 
 La segmentación de rojo en un canal, lejos de ser una limitación, acelera la convergencia en EfficientNet al simplificar drásticamente el espacio de entrada. La arquitectura compensa la pérdida de los pesos ImageNet con la facilidad de la tarea reducida: detectar una región de color en un fondo negro.
 
-La siguiente gráfica muestra los valores reales frente a los predichos por el mejor modelo en el split de test. La alineación con la diagonal perfecta ($y = x$) confirma que el modelo aprende una relación lineal sólida tanto para el steering como para la velocidad, incluso en los regímenes de curva más pronunciados:
+A continuación se muestran las curvas de entrenamiento del experimento de referencia (`EXP_PilotNet_crop`), donde se aprecia la rápida convergencia de la loss y la evolución del R² para steering y velocidad:
+
+<p align="center">
+  <img src="{{ site.baseurl }}/assets/img/p4_training_curves.png"
+       alt="Curvas de entrenamiento del experimento EXP_PilotNet_crop: MSE Loss, R²(w) y R²(v) sobre train y validación"
+       style="max-width: 100%; border-radius: 10px;">
+</p>
+
+El mapa de activaciones **Grad-CAM** sobre la última capa convolucional confirma que la red atiende correctamente a la línea roja del circuito y no a regiones espurias del fondo:
+
+<p align="center">
+  <img src="{{ site.baseurl }}/assets/img/p4_gradcam.png"
+       alt="Grad-CAM sobre PilotNet: la red activa intensamente sobre la línea roja del circuito para predecir el steering"
+       style="max-width: 100%; border-radius: 10px;">
+</p>
+
+La siguiente gráfica muestra los valores reales frente a los predichos por el mejor modelo en el split de test. La alineación con la diagonal perfecta (y = x) confirma que el modelo aprende una relación lineal sólida tanto para el steering como para la velocidad, incluso en los regímenes de curva más pronunciados:
 
 <p align="center">
   <img src="{{ site.baseurl }}/assets/img/p4_r2_scatter.png"
