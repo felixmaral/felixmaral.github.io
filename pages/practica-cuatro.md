@@ -94,7 +94,7 @@ El experimento seleccionado como mejor solución es **`EfficientNet_crop_aug_red
 
 ### Inferencia en Unibotics
 
-El script de inferencia (`E2E.py`) es el que se ejecuta en el simulador Unibotics. Al arrancar, lee `experiment_log.json` del directorio del experimento para saber qué arquitectura se usó y qué flags de preprocesado están activos (`crop`, `red_segment`). Después carga `model.onnx` con `onnxruntime` y consulta directamente la forma de entrada del modelo para determinar el número de canales y la resolución esperada, de modo que la configuración siempre es coherente con el modelo y no depende de que el JSON esté bien escrito.
+El script de inferencia es el que se ejecuta en el simulador Unibotics. Al arrancar, lee `experiment_log.json` del directorio del experimento para saber qué arquitectura se usó y qué flags de preprocesado están activos (`crop`, `red_segment`). Después carga `model.onnx` con `onnxruntime` y consulta directamente la forma de entrada del modelo para determinar el número de canales y la resolución esperada, de modo que la configuración siempre es coherente con el modelo.
 
 El bucle principal ejecuta en cada iteración:
 
@@ -103,8 +103,6 @@ El bucle principal ejecuta en cada iteración:
 3. `session.run()` ejecuta la inferencia ONNX y devuelve dos valores: **w** (velocidad angular) y **v** (velocidad lineal).
 4. `HAL.setW(w)` y `HAL.setV(v)` envían los comandos al robot.
 5. `WebGUI.showImage()` muestra en el visor la imagen con un HUD superpuesto que indica la arquitectura, configuración activa y los valores de **w** y **v** inferidos en ese frame, además de una barra de steering en la parte inferior.
-
-No hay ningún controlador PID ni lógica de decisión adicional. La política de conducción queda completamente en los pesos del modelo.
 
 ## Parámetros de Configuración
 
@@ -144,7 +142,7 @@ El mapa de activaciones **Grad-CAM** sobre la última capa convolucional confirm
        style="max-width: 100%; border-radius: 10px;">
 </p>
 
-La siguiente gráfica muestra los valores reales frente a los predichos por el mejor modelo en el split de test. La alineación con la diagonal perfecta (y = x) confirma que el modelo aprende una relación lineal sólida tanto para el steering como para la velocidad, incluso en los regímenes de curva más pronunciados:
+La siguiente gráfica muestra los valores reales frente a los predichos por el mejor modelo en el split de test. La alineación con la diagonal perfecta (y = x) confirma que el modelo aprende una relación lineal sólida tanto para el steering como para la velocidad (Mucho mas complejo de discriminar, ya que casi siempre el agente experto va a la misma velocidad y en rectas a veces acelera pero no es un patron que siempre se repita).
 
 <p align="center">
   <img src="{{ site.baseurl }}/assets/img/p4_r2_scatter.png"
