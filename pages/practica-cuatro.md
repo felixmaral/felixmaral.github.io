@@ -120,9 +120,9 @@ El bucle principal ejecuta en cada iteración:
 
 ## Resultados y Observaciones
 
-El modelo seleccionado (`EfficientNet_crop_aug_redseg`) consigue que el coche complete varios circuitos de forma continuada manteniendo la línea roja con muy pocas oscilaciones. La combinación de las tres técnicas de preprocesado resulta sinérgica: el crop elimina el contexto visual irrelevante del horizonte, la segmentación de rojo reduce la entrada a la información más discriminativa para la tarea, y el aumentado fuerza al modelo a aprender la geometría de la línea en lugar de memorizar la textura exacta de un circuito concreto.
+El modelo seleccionado (`EfficientNet_crop_aug_redseg`) consigue que el coche complete varios circuitos de forma continuada manteniendose cerca de la línea roja con muy pocas oscilaciones.
 
-El oversampling es determinante para el comportamiento en curvas: sin él, el coche se comporta bien en rectas pero falla sistemáticamente en las curvas pronunciadas, ya que esas muestras están infrarrepresentadas en el dataset original. Con oversampling activo, la distribución de error es mucho más uniforme a lo largo del trazado.
+El oversampling es determinante para el comportamiento en curvas. Sin él, el coche se comporta bien en rectas pero falla sistemáticamente en las curvas pronunciadas sobre todo las que sean distintas a las del dataset. Con oversampling activo, la distribución de error es mucho más uniforme a lo largo del trazado.
 
 La segmentación de rojo en un canal, lejos de ser una limitación, acelera la convergencia en EfficientNet al simplificar drásticamente el espacio de entrada. La arquitectura compensa la pérdida de los pesos ImageNet con la facilidad de la tarea reducida: detectar una región de color en un fondo negro.
 
